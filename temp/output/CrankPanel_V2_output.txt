@@ -1,0 +1,1160 @@
+begin: data; 
+        problem: initial value; 
+end: data; 
+ 
+begin: initial value; 
+        initial time: 0.; 
+        final time: 0.4; 
+        time step: 3.e-4; 
+ 
+	method: ms, 0.6; 
+	#method: ms, 0.1; 
+ 
+        tolerance: 1.E-1; 
+        max iterations: 10; 
+ 
+        derivatives tolerance: 1e6; 
+ 
+	linear solver: umfpack, cc; 
+ 
+        output: iterations; 
+	threads: disable; 
+        #output: residual; 
+end: initial value; 
+ 
+ 
+#python #beginpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:26
+
+#python 1 # from __future__ import print_function, division 
+#python 2 # from MBDynLib import * 
+#python 3 #  
+#python 4 # ConstMBVar('T', 'real', 0.2) 
+#python 5 #  
+#python 6 # ConstMBVar('NX', 'integer', 4) 
+#python 7 # ConstMBVar('NY', 'integer', 4) 
+#python 8 # ConstMBVar('NC', 'integer', 2) 
+#python 9 # ConstMBVar('NP', 'integer', 4) 
+#python 10 # n_dynamic_nodes = (NX + 1) * (NY + 1) 
+#python 11 # n_static_nodes = 2 
+#python 12 # nshells = NX * NY 
+#python 13 # nbeams = NY 
+#python 14 # nels = nshells + nbeams + 3 + NY 
+#python 15 # nbodies = nshells * 4 + nbeams * 2 
+#python 16 #  
+#python 17 # ConstMBVar('L','real', 1.) 
+#python 18 # ConstMBVar('t','real', 15.E-3) 
+#python 19 # ConstMBVar('Lc','real', 0.25) 
+#python 20 # ConstMBVar('Lp','real', 1.) 
+#python 21 #  
+#python 22 # ConstMBVar('acpr', 'real', 0.04) 
+#python 23 # ConstMBVar('arr1', 'real', 0.06) 
+#python 24 # ConstMBVar('arr2', 'real', 0.03) 
+#python 25 # ConstMBVar('Acpr', 'real', acpr * acpr) 
+#python 26 # ConstMBVar('Arr1', 'real', arr1 * arr1) 
+#python 27 # ConstMBVar('Arr2', 'real', arr2 * arr2) 
+#python 28 # #J = ConstMBVar('J', 'real', '1. / 12 * a^4') #DOES NOT WORK WHEN I DEFINE EJ = E * J 
+#python 29 # ConstMBVar('Jcpr', 'real', 1. / 12 * pow(acpr, 4)) 
+#python 30 # ConstMBVar('Jrr1', 'real', 1. / 12 * pow(arr1, 4)) 
+#python 31 # ConstMBVar('Jrr2', 'real', 1. / 12 * pow(arr2, 4)) 
+#python 32 #  
+#python 33 # ConstMBVar('E','real', 73.E9) 
+#python 34 # ConstMBVar('nu','real', 0.3) 
+#python 35 # ConstMBVar('G','real', E/2/(1.+nu)) 
+#python 36 # ConstMBVar('rho','real', 2700) 
+#python 37 #  
+#python 38 # ConstMBVar('EAcpr', 'real', E * Acpr) 
+#python 39 # ConstMBVar('EJcpr', 'real', E * Jcpr) 
+#python 40 # ConstMBVar('GJcpr', 'real', G * 2.25 / 16. * Acpr * Acpr) 
+#python 41 # ConstMBVar('kGAcpr', 'real', 0.6 * G * Acpr) 
+#python 42 # ConstMBVar('EArr1', 'real', E * Arr1) 
+#python 43 # ConstMBVar('EJrr1', 'real', E * Jrr1) 
+#python 44 # ConstMBVar('GJrr1', 'real', G * 2.25 / 16. * Arr1 * Arr1) 
+#python 45 # ConstMBVar('kGArr1', 'real', 0.6 * G * Arr1) 
+#python 46 # ConstMBVar('EArr2', 'real', E * Arr2) 
+#python 47 # ConstMBVar('EJrr2', 'real', E * Jrr2) 
+#python 48 # ConstMBVar('GJrr2', 'real', G * 2.25 / 16. * Arr2 * Arr2) 
+#python 49 # ConstMBVar('kGArr2', 'real', 0.6 * G * Arr2) 
+#python 50 #  
+#python 51 #  
+#python 52 # RelNodeNull = Position('', null()) 
+#python 53 # RelNodeEye = Position('', eye()) 
+#python 54 # BeamOrientationrr = Position('', [1, 0., 1., 0., 2, 1., 0., 0.]) 
+#python 55 # BeamOrientationcr = Position('', [1, 1., 0., 0., 2, 0., 1., 0.]) 
+#python 56 # BeamOrientationpr = Position('', [1, 0., 0., 1., 2, 1., 0., 0.]) 
+#python 57 #  
+#python 58 # ConstMBVar('JDX', 'integer',       1) 
+#python 59 # ConstMBVar('IDX', 'integer',     100) 
+#python 60 # ConstMBVar('IDX1', 'integer',  1000) 
+#python 61 # ConstMBVar('IDX2', 'integer',  2000) 
+#python 62 # ConstMBVar('IDXc', 'integer',  4000) 
+#python 63 # ConstMBVar('IDXp', 'integer',  5000) 
+#python 64 # ConstMBVar('IDX3', 'integer', 10000) 
+#python 65 # ConstMBVar('IDX4', 'integer', 11000) 
+#python 66 #  
+#python 67 # nodes = [] 
+#python 68 # bodies = [] 
+#python 69 # joints = [] 
+#python 70 # shells = [] 
+#python 71 # beams = [] 
+#python #endpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:98
+
+set: T = 0.2;
+set: NX = 4;
+set: NY = 4;
+set: NC = 2;
+set: NP = 4;
+set: L = 1.0;
+set: t = 0.015;
+set: Lc = 0.25;
+set: Lp = 1.0;
+set: acpr = 0.04;
+set: arr1 = 0.06;
+set: arr2 = 0.03;
+set: Acpr = acpr * acpr;
+set: Arr1 = arr1 * arr1;
+set: Arr2 = arr2 * arr2;
+set: Jcpr = 0.08333333333333333 * acpr ^ 4;
+set: Jrr1 = 0.08333333333333333 * arr1 ^ 4;
+set: Jrr2 = 0.08333333333333333 * arr2 ^ 4;
+set: E = 73000000000.0;
+set: nu = 0.3;
+set: G = E / 2 / (1.0 + nu);
+set: rho = 2700;
+set: EAcpr = E * Acpr;
+set: EJcpr = E * Jcpr;
+set: GJcpr = G * 2.25 / 16.0 * Acpr * Acpr;
+set: kGAcpr = 0.6 * G * Acpr;
+set: EArr1 = E * Arr1;
+set: EJrr1 = E * Jrr1;
+set: GJrr1 = G * 2.25 / 16.0 * Arr1 * Arr1;
+set: kGArr1 = 0.6 * G * Arr1;
+set: EArr2 = E * Arr2;
+set: EJrr2 = E * Jrr2;
+set: GJrr2 = G * 2.25 / 16.0 * Arr2 * Arr2;
+set: kGArr2 = 0.6 * G * Arr2;
+set: JDX = 1;
+set: IDX = 100;
+set: IDX1 = 1000;
+set: IDX2 = 2000;
+set: IDXc = 4000;
+set: IDXp = 5000;
+set: IDX3 = 10000;
+set: IDX4 = 11000;
+ 
+ 
+begin: control data; 
+        structural nodes: 
+		(NX + 1) * (NY + 1)  
+		+ (NP + 1) + (NC + 1) 
+	; 
+        beams: 
+		2 * NY + NP + NC 
+	; 
+        plates: 
+		NX * NY 
+	; 
+        joints: 
+		3 + 1 + 1 + 1 
+	; 
+	rigid bodies:  
+		NX * NY * 4 
+		+ 2 * NY 
+		+ 2 * NY 
+		+ 2 * NP 
+		+ 2 * NC 
+	; 
+	print: dof description; 
+end: control data; 
+ 
+#python #beginpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:125
+
+#python 1 # for i in range(NX+1): 
+#python 2 # 	for j in range(NY+1): 
+#python 3 # 		x = L / NX * i 
+#python 4 # 		y = L / NY * j 
+#python 5 # 		z = 0. 
+#python 6 # 		nodes.append(DynamicNode(IDX + (NY + 1) * i + j, Position('', [x, y, z]), RelNodeEye, RelNodeNull, RelNodeNull)) 
+#python 7 #  
+#python 8 # for i in range(NC+1): 
+#python 9 # 	x = L - Lc + Lc / NC * i 
+#python 10 # 	y = 0. 
+#python 11 # 	z = -Lp 
+#python 12 # 	nodes.append(DynamicNode(IDXc + i, Position('', [x, y, z]), RelNodeEye, RelNodeNull, RelNodeNull)) 
+#python 13 #  
+#python 14 # for i in range(NP+1): 
+#python 15 # 	x = L 
+#python 16 # 	y = 0. 
+#python 17 # 	z = -Lp + Lp / NP * i 
+#python 18 # 	nodes.append(DynamicNode(IDXp + i, Position('', [x, y, z]), RelNodeEye, RelNodeNull, RelNodeNull)) 
+#python 19 #  
+#python 20 #  
+#python 21 # for i in range(NX): 
+#python 22 # 	for j in range(NY): 
+#python 23 # 		shells.append(Shell('shell4easans', IDX + NY * i + j,  
+#python 24 # 			[IDX + (NY + 1) * i + j, IDX + (NY + 1) * i + j + 1, IDX + (NY + 1) * (i + 1) + j + 1, IDX + (NY + 1) * (i + 1) + j],  
+#python 25 # 			['isotropic', 'E', E, 'nu', nu, 'thickness', t])) 
+#python 26 #  
+#python 27 # elastic_beam_rr1 = ['linear elastic generic', 'diag', EArr1, kGArr1, kGArr1, GJrr1, EJrr1, EJrr1] 
+#python 28 # elastic_beam_rr2 = ['linear elastic generic', 'diag', EArr2, kGArr2, kGArr2, GJrr2, EJrr2, EJrr2] 
+#python 29 # for j in range(NY): 
+#python 30 # 	beams.append(Beam(IDX1 + j, [IDX + j, IDX + j + 1], [RelNodeNull, RelNodeNull], [RelNodeEye, RelNodeEye], 
+#python 31 # 	[BeamOrientationrr], [elastic_beam_rr1])) 
+#python 32 # 	for i in range(2): 
+#python 33 # 		bodies.append(Body(IDX3 + IDX2 * j  + i, beams[len(beams)-1].nodes[i], Arr1 * rho * L / NY / 2, RelNodeNull, ['diag', 0., 0., 0.])) 
+#python 34 # 	beams.append(Beam(IDX2 + j, [IDX + NX * (NY + 1) + j, IDX + NX * (NY + 1) + j + 1], [RelNodeNull, RelNodeNull], [RelNodeEye, RelNodeEye], 
+#python 35 # 	[BeamOrientationrr], [elastic_beam_rr2])) 
+#python 36 # 	for i in range(2): 
+#python 37 # 		bodies.append(Body(IDX3 + IDX2 * j  + 2 + i, beams[len(beams)-1].nodes[i], Arr2 * rho * L / NY / 2, RelNodeNull, ['diag', 0., 0., 0.])) 
+#python 38 #  
+#python 39 # elastic_beam_cpr = ['linear elastic generic', 'diag', EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr] 
+#python 40 # for j in range(NC): 
+#python 41 # 	beams.append(Beam(IDXc + j, [IDXc + j, IDXc + j + 1], [RelNodeNull, RelNodeNull], [RelNodeEye, RelNodeEye], 
+#python 42 # 	[BeamOrientationcr], [elastic_beam_cpr])) 
+#python 43 # 	for i in range(2): 
+#python 44 # 		bodies.append(Body(IDX3 + IDX2 * j  + 4 + i, beams[len(beams)-1].nodes[i], Acpr * rho * Lc / NC / 2, RelNodeNull, ['diag', 0., 0., 0.])) 
+#python 45 # for j in range(NP): 
+#python 46 # 	beams.append(Beam(IDXp + j, [IDXp + j, IDXp + j + 1], [RelNodeNull, RelNodeNull], [RelNodeEye, RelNodeEye], 
+#python 47 # 	[BeamOrientationpr], [elastic_beam_cpr])) 
+#python 48 # 	for i in range(2): 
+#python 49 # 		bodies.append(Body(IDX3 + IDX2 * j  + 6 + i, beams[len(beams)-1].nodes[i], Acpr * rho * Lp / NP / 2, RelNodeNull, ['diag', 0., 0., 0.])) 
+#python 50 #  
+#python 51 # for i in range(len(shells)): 
+#python 52 # 	for j in range(4): 
+#python 53 # 		bodies.append(Body( 
+#python 54 # 		IDX2 * j + i, shells[i].nodes[j], L * L * t * rho / (NX * NX) / 4, RelNodeNull, ['diag', 0., 0., 0.])) 
+#python #endpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:180
+
+ 
+begin: nodes; 
+#python #beginpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:183
+
+#python 1 # [print(d) for d in nodes] 
+#python #endpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:185
+
+structural: IDX, dynamic,
+	0, 0, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + 1, dynamic,
+	0, L / NY, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + 2, dynamic,
+	0, L / NY * 2, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + 3, dynamic,
+	0, L / NY * 3, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + 4, dynamic,
+	0, L / NY * 4, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + NY + 1, dynamic,
+	L / NX, 0, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + NY + 1 + 1, dynamic,
+	L / NX, L / NY, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + NY + 1 + 2, dynamic,
+	L / NX, L / NY * 2, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + NY + 1 + 3, dynamic,
+	L / NX, L / NY * 3, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + NY + 1 + 4, dynamic,
+	L / NX, L / NY * 4, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 2, dynamic,
+	L / NX * 2, 0, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 2 + 1, dynamic,
+	L / NX * 2, L / NY, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 2 + 2, dynamic,
+	L / NX * 2, L / NY * 2, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 2 + 3, dynamic,
+	L / NX * 2, L / NY * 3, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 2 + 4, dynamic,
+	L / NX * 2, L / NY * 4, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 3, dynamic,
+	L / NX * 3, 0, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 3 + 1, dynamic,
+	L / NX * 3, L / NY, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 3 + 2, dynamic,
+	L / NX * 3, L / NY * 2, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 3 + 3, dynamic,
+	L / NX * 3, L / NY * 3, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 3 + 4, dynamic,
+	L / NX * 3, L / NY * 4, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 4, dynamic,
+	L / NX * 4, 0, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 4 + 1, dynamic,
+	L / NX * 4, L / NY, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 4 + 2, dynamic,
+	L / NX * 4, L / NY * 2, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 4 + 3, dynamic,
+	L / NX * 4, L / NY * 3, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDX + (NY + 1) * 4 + 4, dynamic,
+	L / NX * 4, L / NY * 4, 0.0,
+	eye,
+	null,
+	null;
+
+structural: IDXc, dynamic,
+	L - Lc, 0.0, -Lp,
+	eye,
+	null,
+	null;
+
+structural: IDXc + 1, dynamic,
+	L - Lc + Lc / NC, 0.0, -Lp,
+	eye,
+	null,
+	null;
+
+structural: IDXc + 2, dynamic,
+	L - Lc + Lc / NC * 2, 0.0, -Lp,
+	eye,
+	null,
+	null;
+
+structural: IDXp, dynamic,
+	L, 0.0, -Lp,
+	eye,
+	null,
+	null;
+
+structural: IDXp + 1, dynamic,
+	L, 0.0, -Lp + Lp / NP,
+	eye,
+	null,
+	null;
+
+structural: IDXp + 2, dynamic,
+	L, 0.0, -Lp + Lp / NP * 2,
+	eye,
+	null,
+	null;
+
+structural: IDXp + 3, dynamic,
+	L, 0.0, -Lp + Lp / NP * 3,
+	eye,
+	null,
+	null;
+
+structural: IDXp + 4, dynamic,
+	L, 0.0, -Lp + Lp / NP * 4,
+	eye,
+	null,
+	null;
+
+end: nodes; 
+ 
+begin: elements; 
+#python #beginpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:189
+
+#python 1 # [print(d) for d in bodies] 
+#python 2 # [print(d) for d in joints] 
+#python #endpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:192
+
+body: IDX3, IDX,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 1, IDX + 1,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 2, IDX + NX * (NY + 1),
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 2 + 1, IDX + NX * (NY + 1) + 1,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2, IDX + 1,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 1, IDX + 1 + 1,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 2, IDX + NX * (NY + 1) + 1,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 2 + 1, IDX + NX * (NY + 1) + 1 + 1,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2, IDX + 2,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2 + 1, IDX + 2 + 1,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2 + 2, IDX + NX * (NY + 1) + 2,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2 + 2 + 1, IDX + NX * (NY + 1) + 2 + 1,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3, IDX + 3,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3 + 1, IDX + 3 + 1,
+	Arr1 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3 + 2, IDX + NX * (NY + 1) + 3,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3 + 2 + 1, IDX + NX * (NY + 1) + 3 + 1,
+	Arr2 * rho / NY / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 4, IDXc,
+	Acpr * rho * Lc / NC / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 4 + 1, IDXc + 1,
+	Acpr * rho * Lc / NC / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 4, IDXc + 1,
+	Acpr * rho * Lc / NC / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 4 + 1, IDXc + 1 + 1,
+	Acpr * rho * Lc / NC / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 6, IDXp,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + 6 + 1, IDXp + 1,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 6, IDXp + 1,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 + 6 + 1, IDXp + 1 + 1,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2 + 6, IDXp + 2,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 2 + 6 + 1, IDXp + 2 + 1,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3 + 6, IDXp + 3,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX3 + IDX2 * 3 + 6 + 1, IDXp + 3 + 1,
+	Acpr * rho / NP / 2,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 0, IDX,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2, IDX + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2, IDX + NY + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3, IDX + NY + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 1, IDX + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 1, IDX + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 1, IDX + NY + 1 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 1, IDX + NY + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 2, IDX + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 2, IDX + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 2, IDX + NY + 1 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 2, IDX + NY + 1 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 3, IDX + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 3, IDX + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 3, IDX + NY + 1 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 3, IDX + NY + 1 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 4, IDX + NY + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 4, IDX + NY + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 4, IDX + (NY + 1) * 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 4, IDX + (NY + 1) * 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 5, IDX + NY + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 5, IDX + NY + 1 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 5, IDX + (NY + 1) * 2 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 5, IDX + (NY + 1) * 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 6, IDX + NY + 1 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 6, IDX + NY + 1 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 6, IDX + (NY + 1) * 2 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 6, IDX + (NY + 1) * 2 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 7, IDX + NY + 1 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 7, IDX + NY + 1 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 7, IDX + (NY + 1) * 2 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 7, IDX + (NY + 1) * 2 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 8, IDX + (NY + 1) * 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 8, IDX + (NY + 1) * 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 8, IDX + (NY + 1) * 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 8, IDX + (NY + 1) * 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 9, IDX + (NY + 1) * 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 9, IDX + (NY + 1) * 2 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 9, IDX + (NY + 1) * 3 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 9, IDX + (NY + 1) * 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 10, IDX + (NY + 1) * 2 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 10, IDX + (NY + 1) * 2 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 10, IDX + (NY + 1) * 3 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 10, IDX + (NY + 1) * 3 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 11, IDX + (NY + 1) * 2 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 11, IDX + (NY + 1) * 2 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 11, IDX + (NY + 1) * 3 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 11, IDX + (NY + 1) * 3 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 12, IDX + (NY + 1) * 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 12, IDX + (NY + 1) * 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 12, IDX + (NY + 1) * 4 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 12, IDX + (NY + 1) * 4,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 13, IDX + (NY + 1) * 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 13, IDX + (NY + 1) * 3 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 13, IDX + (NY + 1) * 4 + 1 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 13, IDX + (NY + 1) * 4 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 14, IDX + (NY + 1) * 3 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 14, IDX + (NY + 1) * 3 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 14, IDX + (NY + 1) * 4 + 2 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 14, IDX + (NY + 1) * 4 + 2,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: 15, IDX + (NY + 1) * 3 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 + 15, IDX + (NY + 1) * 3 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 2 + 15, IDX + (NY + 1) * 4 + 3 + 1,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+body: IDX2 * 3 + 15, IDX + (NY + 1) * 4 + 3,
+	t * rho / (NX * NX) / 4,
+	null,
+	diag, 0.0, 0.0, 0.0;
+
+ 
+joint: JDX, revolute pin, 
+	IDX + (NY + 1) * 0 + 0, 
+		position, reference, node, null, 
+		orientation, 1, 0., 0., 1., 2, 1., 0., 0., 
+	position, 0., 0., 0., 
+	orientation, 1, 0., 0., 1., 2, 1., 0., 0.; 
+ 
+joint: JDX + 1, revolute pin, 
+	IDX + (NY + 1) * 0 + NY, 
+		position, reference, node, null, 
+		orientation, 1, 0., 0., 1., 2, 1., 0., 0., 
+	position, 0., L, 0., 
+	orientation, 1, 0., 0., 1., 2, 1., 0., 0.; 
+ 
+joint: JDX + 2, spherical hinge, 
+	IDX + (NY + 1) * NX,  
+		position, reference, node, null, 
+	IDXp + NP, 
+		position, reference, node, null; 
+ 
+joint: JDX + 3, cardano hinge, 
+	IDXc + NC, 
+		position, reference, node, null, 
+		orientation, 1, 1., 0., 0., 2, 0., 0., 1., 
+	IDXp + 0, 
+		position, reference, node, null, 
+		orientation, 1, 0., 0., 1, 2, 1., 0., 0.; 
+ 
+joint: JDX + 4, revolute pin, 
+	IDXc + 0, 
+		position, reference, node, null, 
+		orientation, 1, 0., 0., 1., 2, 1., 0., 0., 
+	position, L - Lc, 0., -Lp, 
+	orientation, 1, 0., 0., 1., 2, 1., 0., 0.; 
+ 
+joint: JDX + 5, angular velocity,  
+	IDXc,  
+		0., 1., 0., 
+		sine, 0., pi/T, -pi / 4. * pi / T, one, 0.; 
+	 
+#python #beginpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:234
+
+#python 1 # [print(d) for d in shells] 
+#python 2 # [print(d) for d in beams] 
+#python 3 #  
+#python #endpreprocess at ./PythonPreprocessor/examples/CrankPanel_v2.mbd:238
+
+shell4easans: IDX,
+	IDX, IDX + 1, IDX + NY + 1 + 1, IDX + NY + 1,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + 1,
+	IDX + 1, IDX + 1 + 1, IDX + NY + 1 + 1 + 1, IDX + NY + 1 + 1,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + 2,
+	IDX + 2, IDX + 2 + 1, IDX + NY + 1 + 2 + 1, IDX + NY + 1 + 2,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + 3,
+	IDX + 3, IDX + 3 + 1, IDX + NY + 1 + 3 + 1, IDX + NY + 1 + 3,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY,
+	IDX + NY + 1, IDX + NY + 1 + 1, IDX + (NY + 1) * 2 + 1, IDX + (NY + 1) * 2,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY + 1,
+	IDX + NY + 1 + 1, IDX + NY + 1 + 1 + 1, IDX + (NY + 1) * 2 + 1 + 1, IDX + (NY + 1) * 2 + 1,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY + 2,
+	IDX + NY + 1 + 2, IDX + NY + 1 + 2 + 1, IDX + (NY + 1) * 2 + 2 + 1, IDX + (NY + 1) * 2 + 2,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY + 3,
+	IDX + NY + 1 + 3, IDX + NY + 1 + 3 + 1, IDX + (NY + 1) * 2 + 3 + 1, IDX + (NY + 1) * 2 + 3,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 2,
+	IDX + (NY + 1) * 2, IDX + (NY + 1) * 2 + 1, IDX + (NY + 1) * 3 + 1, IDX + (NY + 1) * 3,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 2 + 1,
+	IDX + (NY + 1) * 2 + 1, IDX + (NY + 1) * 2 + 1 + 1, IDX + (NY + 1) * 3 + 1 + 1, IDX + (NY + 1) * 3 + 1,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 2 + 2,
+	IDX + (NY + 1) * 2 + 2, IDX + (NY + 1) * 2 + 2 + 1, IDX + (NY + 1) * 3 + 2 + 1, IDX + (NY + 1) * 3 + 2,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 2 + 3,
+	IDX + (NY + 1) * 2 + 3, IDX + (NY + 1) * 2 + 3 + 1, IDX + (NY + 1) * 3 + 3 + 1, IDX + (NY + 1) * 3 + 3,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 3,
+	IDX + (NY + 1) * 3, IDX + (NY + 1) * 3 + 1, IDX + (NY + 1) * 4 + 1, IDX + (NY + 1) * 4,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 3 + 1,
+	IDX + (NY + 1) * 3 + 1, IDX + (NY + 1) * 3 + 1 + 1, IDX + (NY + 1) * 4 + 1 + 1, IDX + (NY + 1) * 4 + 1,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 3 + 2,
+	IDX + (NY + 1) * 3 + 2, IDX + (NY + 1) * 3 + 2 + 1, IDX + (NY + 1) * 4 + 2 + 1, IDX + (NY + 1) * 4 + 2,
+	isotropic, E, E, nu, nu, thickness, t;
+
+shell4easans: IDX + NY * 3 + 3,
+	IDX + (NY + 1) * 3 + 3, IDX + (NY + 1) * 3 + 3 + 1, IDX + (NY + 1) * 4 + 3 + 1, IDX + (NY + 1) * 4 + 3,
+	isotropic, E, E, nu, nu, thickness, t;
+
+beam2: IDX1,
+	IDX,
+		position, null,
+		orientation, eye,
+	IDX + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr1, kGArr1, kGArr1, GJrr1, EJrr1, EJrr1;
+
+beam2: IDX2,
+	IDX + NX * (NY + 1),
+		position, null,
+		orientation, eye,
+	IDX + NX * (NY + 1) + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr2, kGArr2, kGArr2, GJrr2, EJrr2, EJrr2;
+
+beam2: IDX1 + 1,
+	IDX + 1,
+		position, null,
+		orientation, eye,
+	IDX + 1 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr1, kGArr1, kGArr1, GJrr1, EJrr1, EJrr1;
+
+beam2: IDX2 + 1,
+	IDX + NX * (NY + 1) + 1,
+		position, null,
+		orientation, eye,
+	IDX + NX * (NY + 1) + 1 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr2, kGArr2, kGArr2, GJrr2, EJrr2, EJrr2;
+
+beam2: IDX1 + 2,
+	IDX + 2,
+		position, null,
+		orientation, eye,
+	IDX + 2 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr1, kGArr1, kGArr1, GJrr1, EJrr1, EJrr1;
+
+beam2: IDX2 + 2,
+	IDX + NX * (NY + 1) + 2,
+		position, null,
+		orientation, eye,
+	IDX + NX * (NY + 1) + 2 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr2, kGArr2, kGArr2, GJrr2, EJrr2, EJrr2;
+
+beam2: IDX1 + 3,
+	IDX + 3,
+		position, null,
+		orientation, eye,
+	IDX + 3 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr1, kGArr1, kGArr1, GJrr1, EJrr1, EJrr1;
+
+beam2: IDX2 + 3,
+	IDX + NX * (NY + 1) + 3,
+		position, null,
+		orientation, eye,
+	IDX + NX * (NY + 1) + 3 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 1.0, 0.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EArr2, kGArr2, kGArr2, GJrr2, EJrr2, EJrr2;
+
+beam2: IDXc,
+	IDXc,
+		position, null,
+		orientation, eye,
+	IDXc + 1,
+		position, null,
+		orientation, eye,
+	1, 1.0, 0.0, 0.0, 2, 0.0, 1.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+beam2: IDXc + 1,
+	IDXc + 1,
+		position, null,
+		orientation, eye,
+	IDXc + 1 + 1,
+		position, null,
+		orientation, eye,
+	1, 1.0, 0.0, 0.0, 2, 0.0, 1.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+beam2: IDXp,
+	IDXp,
+		position, null,
+		orientation, eye,
+	IDXp + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 0.0, 1.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+beam2: IDXp + 1,
+	IDXp + 1,
+		position, null,
+		orientation, eye,
+	IDXp + 1 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 0.0, 1.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+beam2: IDXp + 2,
+	IDXp + 2,
+		position, null,
+		orientation, eye,
+	IDXp + 2 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 0.0, 1.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+beam2: IDXp + 3,
+	IDXp + 3,
+		position, null,
+		orientation, eye,
+	IDXp + 3 + 1,
+		position, null,
+		orientation, eye,
+	1, 0.0, 0.0, 1.0, 2, 1.0, 0.0, 0.0,
+	linear elastic generic, diag, EAcpr, kGAcpr, kGAcpr, GJcpr, EJcpr, EJcpr;
+
+end: elements; 
+ 
+# vim:ft=mbd 
+
+
+# vim:ft=mbd
+
+
