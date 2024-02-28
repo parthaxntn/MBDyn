@@ -2403,6 +2403,8 @@ class FourierSeriesDrive(DriveCaller):
                     '\n-------------------\n'
                 )
             self.initial_time= kwargs[arg]
+        except KeyError:
+            pass
         try:
             arg = 'angular_velocity'
             assert isinstance(kwargs[arg], (MBVar, Number)), (
@@ -2418,6 +2420,8 @@ class FourierSeriesDrive(DriveCaller):
                     '\n-------------------\n'
                 )
             self.angular_velocity = kwargs[arg]
+        except KeyError:
+            pass
         try:
             arg = 'number_of_terms'
             assert isinstance(kwargs[arg], (MBVar, Integral)), (
@@ -2433,6 +2437,8 @@ class FourierSeriesDrive(DriveCaller):
                     '\n-------------------\n'
                 )
             self.number_of_terms = kwargs[arg]
+        except KeyError:
+            pass
         try:
             arg = 'number_of_cycles'
             assert isinstance(kwargs[arg], (MBVar, Integral, str)), (
@@ -2449,6 +2455,8 @@ class FourierSeriesDrive(DriveCaller):
                         '\n-------------------\n'
                         )
             self.number_of_cycles = kwargs[arg]
+        except KeyError:
+            pass
     def __str__(self):
         s = ''
         if self.idx >= 0:
@@ -2459,7 +2467,7 @@ class FourierSeriesDrive(DriveCaller):
                     self.angular_velocity,
                     self.number_of_terms
                     )
-        s = s + ',\n\t {}'.format(self.coefs
+        s = s + ',\n\t {}'.format(self.coefs)
         return s
 
 
